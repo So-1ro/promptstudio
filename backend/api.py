@@ -18,7 +18,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # ローカルの Next.js
-        # "https://promptstudio-ssng.onrender.com",  # デプロイ後に必要なら追加
+        "https://promptstudio-gold.vercel.app",  # デプロイ後に必要なら追加
     ],
     allow_credentials=True,
     allow_methods=["*"],
