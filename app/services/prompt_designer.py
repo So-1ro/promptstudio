@@ -1,3 +1,5 @@
+# app/services/prompt_designer.py
+
 import os
 import asyncio
 from dotenv import load_dotenv
@@ -8,7 +10,6 @@ load_dotenv()
 
 # コンソールに詳細ログを出したくない場合は、この1行はコメントアウトしてOK
 enable_verbose_stdout_logging()
-
 
 # model定義
 ai_model = "gpt-4.1-mini"
@@ -33,7 +34,6 @@ structure_agent = Agent(
 """,
     model=ai_model,
 )
-
 
 # 2) 作成エージェント（ライター）
 writer_agent = Agent(
@@ -60,7 +60,6 @@ writer_agent = Agent(
 """,
     model=ai_model,
 )
-
 
 # 3) 検査エージェント（Reviewer）
 reviewer_agent = Agent(
@@ -90,7 +89,6 @@ async def design_prompt(user_request: str):
     1) 構成 → 2) プロンプト作成 → 3) レビュー
     を1つの trace として実行する
     """
-    # ここからここまでが 1 トレースとして記録される
     with trace(workflow_name="PromptDesigner", metadata={"user_request": user_request}):
         # ① ユーザー要望 → 構成エージェント
         structure_input = (
@@ -130,25 +128,3 @@ async def design_prompt(user_request: str):
             "draft_prompt": draft_prompt,
             "review": review_text,
         }
-
-
-if __name__ == "__main__":
-    # コンソールから何度でも要望を入力できるようにする
-    while True:
-        user_request = input(
-            "\n作成したいプロンプトの要望を入力してください（終了するには 'q'）：\n> "
-        )
-        if user_request.lower() == "q":
-            print("終了します。")
-            break
-
-        result = asyncio.run(design_prompt(user_request))
-
-        print("\n===== [1] 構成エージェントの出力 =====")
-        print(result["structure"])
-
-        print("\n===== [2] 作成エージェントのドラフト =====")
-        print(result["draft_prompt"])
-
-        print("\n===== [3] 検査エージェントのレビュー＆最終プロンプト =====")
-        print(result["review"])
