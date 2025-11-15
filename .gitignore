@@ -1,11 +1,13 @@
+# Node / Next.js
+node_modules
+.next
+
 # Python
-__pycache__/
-*.pyc
-.venv/
+.venv
+__pycache__
 
-# Node
-node_modules/
-
-# Env
+# env
 .env
-.env.local
+
+# mac
+.DS_Store
