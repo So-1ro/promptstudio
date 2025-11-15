@@ -59,11 +59,14 @@ export default function Home() {
     setCopied(false);
 
     try {
-      const res = await fetch("http://localhost:8000/design_prompt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userRequest }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/design_prompt`, 
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userRequest }),
+        }
+      );
 
       if (!res.ok) {
         const text = await res.text();
