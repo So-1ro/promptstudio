@@ -8,27 +8,9 @@ type DesignResult = {
   review: string;
 };
 
-// Reviewer の出力から「最終プロンプト本文」だけを抽出
-function extractFinalPrompt(review: string): string {
-  if (!review) return "";
-
-  // 1. 「# 役割」があれば、そこから下をすべて使う
-  const roleIdx = review.indexOf("# 役割");
-  if (roleIdx !== -1) {
-    const sliced = review.slice(roleIdx);
-
-    // 念のため「# 最終プロンプト」が紛れていたら削る
-    return sliced.replace(/^# 最終プロンプト\s*/m, "").trim();
-  }
-
-  // 2. 「# 役割」が無い場合は全文をそのまま使う
-  return review.replace(/^# 最終プロンプト\s*/m, "").trim();
-}
-
-
 export default function Home() {
   const [userRequest, setUserRequest] = useState("");
-  const [finalBody, setFinalBody] = useState(""); // プロンプト本文（#役割〜）
+  const [finalBody, setFinalBody] = useState(""); // プロンプト本文
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -43,7 +25,7 @@ export default function Home() {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/design_prompt`, 
+        `${process.env.NEXT_PUBLIC_API_URL}/design_prompt`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -57,8 +39,20 @@ export default function Home() {
       }
 
       const data = (await res.json()) as DesignResult;
-      const extracted = extractFinalPrompt(data.review);
-      setFinalBody(extracted);
+
+      console.log("API response", data);
+
+      if (data.review) {
+        // Reviewer が返した本文をそのまま表示
+        setFinalBody(data.review.trim());
+      } else {
+        // 念のため review が無い場合のフォールバック
+        setFinalBody(
+          typeof (data as any) === "string"
+            ? (data as any)
+            : JSON.stringify(data, null, 2)
+        );
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.message || "エラーが発生しました");
@@ -117,7 +111,7 @@ export default function Home() {
           </p>
         </header>
 
-        {/*　プロンプトエディタカード */}
+        {/* プロンプトエディタカード */}
         <section
           style={{
             backgroundColor: "#ffffff",
@@ -145,7 +139,8 @@ export default function Home() {
               marginBottom: "12px",
             }}
           >
-            テキストボックスに「どのようなプロンプトを作りたいか(=設計書)」を日本語で入力してください。<br />
+            テキストボックスに「どのようなプロンプトを作りたいか(=設計書)」を日本語で入力してください。
+            <br />
             設計書の内容を元に、複数のAIエージェントが様々な観点から最適なプロンプトを生成します。
           </p>
 
@@ -325,7 +320,8 @@ export default function Home() {
               marginBottom: "16px",
             }}
           >
-            PromptStudio は、プロンプト作成を「シンプル」「効率的」「再利用しやすい」形でサポートします。<br />
+            PromptStudio は、プロンプト作成を「シンプル」「効率的」「再利用しやすい」形でサポートします。
+            <br />
             業務・学習・AI活用のあらゆるシーンに最適なプロンプトを、誰でも短時間で生成できます。
           </p>
 
@@ -339,13 +335,21 @@ export default function Home() {
             }}
           >
             <div>
-              <h3 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px" }}>
+              <h3
+                style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px" }}
+              >
                 プロンプト設計
               </h3>
               <ul style={{ paddingLeft: "16px", margin: 0 }}>
                 <li>
                   <strong>要件ベースの自動プロンプト生成</strong>
-                  <ul style={{ paddingLeft: "16px", marginTop: "4px", marginBottom: "8px" }}>
+                  <ul
+                    style={{
+                      paddingLeft: "16px",
+                      marginTop: "4px",
+                      marginBottom: "8px",
+                    }}
+                  >
                     <li style={{ fontSize: "14px", color: "#555" }}>
                       - 入力内容に応じて最適なプロンプトを自動生成します。
                     </li>
@@ -354,7 +358,13 @@ export default function Home() {
 
                 <li>
                   <strong>プロンプト構造化</strong>
-                  <ul style={{ paddingLeft: "16px", marginTop: "4px", marginBottom: "8px" }}>
+                  <ul
+                    style={{
+                      paddingLeft: "16px",
+                      marginTop: "4px",
+                      marginBottom: "8px",
+                    }}
+                  >
                     <li style={{ fontSize: "14px", color: "#555" }}>
                       - 実務で使いやすい構造に整理し、テンプレート化します。
                     </li>
@@ -363,7 +373,13 @@ export default function Home() {
 
                 <li>
                   <strong>クオリティチェック</strong>
-                  <ul style={{ paddingLeft: "16px", marginTop: "4px", marginBottom: "8px" }}>
+                  <ul
+                    style={{
+                      paddingLeft: "16px",
+                      marginTop: "4px",
+                      marginBottom: "8px",
+                    }}
+                  >
                     <li style={{ fontSize: "14px", color: "#555" }}>
                       - 曖昧さや過不足を自動チェックし、精度を向上します。
                     </li>
@@ -372,13 +388,21 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h3 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px" }}>
+              <h3
+                style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px" }}
+              >
                 出力・コピー
               </h3>
               <ul style={{ paddingLeft: "16px", margin: 0 }}>
                 <li>
                   <strong>最終プロンプトのみをクリーン表示</strong>
-                  <ul style={{ paddingLeft: "16px", marginTop: "4px", marginBottom: "8px" }}>
+                  <ul
+                    style={{
+                      paddingLeft: "16px",
+                      marginTop: "4px",
+                      marginBottom: "8px",
+                    }}
+                  >
                     <li style={{ fontSize: "14px", color: "#555" }}>
                       - 余計な説明等を除去した純粋なプロンプトだけを抽出
                     </li>
@@ -387,7 +411,13 @@ export default function Home() {
 
                 <li>
                   <strong>ワンクリックコピー</strong>
-                  <ul style={{ paddingLeft: "16px", marginTop: "4px", marginBottom: "8px" }}>
+                  <ul
+                    style={{
+                      paddingLeft: "16px",
+                      marginTop: "4px",
+                      marginBottom: "8px",
+                    }}
+                  >
                     <li style={{ fontSize: "14px", color: "#555" }}>
                       - ChatGPTやClaudeなど各ツールに貼り付けやすい形で出力
                     </li>
@@ -396,7 +426,13 @@ export default function Home() {
 
                 <li>
                   <strong>LLM向け最適化フォーマット</strong>
-                  <ul style={{ paddingLeft: "16px", marginTop: "4px", marginBottom: "8px" }}>
+                  <ul
+                    style={{
+                      paddingLeft: "16px",
+                      marginTop: "4px",
+                      marginBottom: "8px",
+                    }}
+                  >
                     <li style={{ fontSize: "14px", color: "#555" }}>
                       - 曖昧さや過不足を自動チェックし、精度を向上します。
                     </li>
@@ -405,13 +441,21 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h3 style={{ fontWeight: 600, marginBottom: "4px" }}>
+              <h3
+                style={{ fontWeight: 600, marginBottom: "4px" }}
+              >
                 利用シーン
               </h3>
               <ul style={{ paddingLeft: "16px", margin: 0 }}>
                 <li>
                   <strong>自社業務プロセスのプロンプト標準化</strong>
-                  <ul style={{ paddingLeft: "16px", marginTop: "4px", marginBottom: "8px" }}>
+                  <ul
+                    style={{
+                      paddingLeft: "16px",
+                      marginTop: "4px",
+                      marginBottom: "8px",
+                    }}
+                  >
                     <li style={{ fontSize: "14px", color: "#555" }}>
                       - レポート生成／問い合わせ対応／ナレッジ整理など
                     </li>
@@ -420,7 +464,13 @@ export default function Home() {
 
                 <li>
                   <strong>社内向け AI 活用ガイドの作成</strong>
-                  <ul style={{ paddingLeft: "16px", marginTop: "4px", marginBottom: "8px" }}>
+                  <ul
+                    style={{
+                      paddingLeft: "16px",
+                      marginTop: "4px",
+                      marginBottom: "8px",
+                    }}
+                  >
                     <li style={{ fontSize: "14px", color: "#555" }}>
                       - AI教育用プロンプトの整備・テンプレート化
                     </li>
@@ -429,7 +479,13 @@ export default function Home() {
 
                 <li>
                   <strong>個人の作業フロー効率化・自動化</strong>
-                  <ul style={{ paddingLeft: "16px", marginTop: "4px", marginBottom: "8px" }}>
+                  <ul
+                    style={{
+                      paddingLeft: "16px",
+                      marginTop: "4px",
+                      marginBottom: "8px",
+                    }}
+                  >
                     <li style={{ fontSize: "14px", color: "#555" }}>
                       - プロンプトの再利用／テンプレート管理／日常業務の効率UP
                     </li>
