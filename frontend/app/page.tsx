@@ -17,12 +17,12 @@ export default function Home() {
 
   const handleGenerate = async () => {
     if (!userRequest.trim()) return;
-
+  
     setLoading(true);
     setError(null);
     setFinalBody("");
     setCopied(false);
-
+  
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/design_prompt`,
@@ -32,35 +32,38 @@ export default function Home() {
           body: JSON.stringify({ userRequest }),
         }
       );
-
+  
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || "API Error");
+        throw new Error(text || `API Error: ${res.status}`);
       }
-
-      const data = (await res.json()) as DesignResult;
-
+  
+      const data = await res.json();
       console.log("API response", data);
-
-      if (data.review) {
-        // Reviewer が返した本文をそのまま表示
-        setFinalBody(data.review.trim());
+  
+      // ---- ここがポイント ----
+      // Python 側のキー名の揺れに耐えられるように、候補を全部見る
+      const review =
+        data.review ??
+        data.final_body ??
+        data.finalBody ??
+        data.result ??
+        data.prompt;
+  
+      if (typeof review === "string" && review.trim()) {
+        setFinalBody(review.trim());
       } else {
-        // 念のため review が無い場合のフォールバック
-        setFinalBody(
-          typeof (data as any) === "string"
-            ? (data as any)
-            : JSON.stringify(data, null, 2)
-        );
+        // 最終手段として JSON 全体を表示
+        setFinalBody(JSON.stringify(data, null, 2));
       }
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || "エラーが発生しました");
+      console.error("handleGenerate error:", err);
+      setError(err?.message || "予期せぬエラーが発生しました");
     } finally {
       setLoading(false);
     }
   };
-
+  
   const handleClear = () => {
     setUserRequest("");
     setFinalBody("");
