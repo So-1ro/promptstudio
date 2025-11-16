@@ -12,12 +12,12 @@ type DesignResult = {
 function extractFinalPrompt(review: string): string {
   if (!review) return "";
 
-  // 1. ``` ～ ``` で囲まれたコードブロックがあれば、その中身を優先
+  // 1. ``` で囲まれたコードブロックがあれば、その中身を優先
   const firstFence = review.indexOf("```");
   if (firstFence !== -1) {
-    let afterFirst = review.slice(firstFence + 3); // ``` の後ろ
+    let afterFirst = review.slice(firstFence + 3);
 
-    // 言語指定（```markdown など）があれば1行スキップ
+    // 言語指定（```markdown など）を1行スキップ
     const firstNewline = afterFirst.indexOf("\n");
     if (firstNewline !== -1) {
       const firstLine = afterFirst.slice(0, firstNewline).trim();
@@ -33,9 +33,15 @@ function extractFinalPrompt(review: string): string {
     if (trimmed) return trimmed;
   }
 
-  // 2. コードブロックが無ければ、Reviewer の出力全文をそのまま使う
+  // 2. フォールバック：テキスト内の「# 役割」以降
+  const roleIdx = review.indexOf("# 役割");
+  if (roleIdx !== -1) {
+    return review.slice(roleIdx).trim();
+  }
+
   return review.trim();
 }
+
 
 export default function Home() {
   const [userRequest, setUserRequest] = useState("");
