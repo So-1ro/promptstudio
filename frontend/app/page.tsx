@@ -12,34 +12,17 @@ type DesignResult = {
 function extractFinalPrompt(review: string): string {
   if (!review) return "";
 
-  // 1. ``` で囲まれたコードブロックがあれば、その中身を優先
-  const firstFence = review.indexOf("```");
-  if (firstFence !== -1) {
-    let afterFirst = review.slice(firstFence + 3);
-
-    // 言語指定（```markdown など）を1行スキップ
-    const firstNewline = afterFirst.indexOf("\n");
-    if (firstNewline !== -1) {
-      const firstLine = afterFirst.slice(0, firstNewline).trim();
-      if (/^[a-zA-Z]+$/.test(firstLine)) {
-        afterFirst = afterFirst.slice(firstNewline + 1);
-      }
-    }
-
-    const secondFence = afterFirst.indexOf("```");
-    const codeBlock =
-      secondFence !== -1 ? afterFirst.slice(0, secondFence) : afterFirst;
-    const trimmed = codeBlock.trim();
-    if (trimmed) return trimmed;
-  }
-
-  // 2. フォールバック：テキスト内の「# 役割」以降
+  // 1. 「# 役割」があれば、そこから下をすべて使う
   const roleIdx = review.indexOf("# 役割");
   if (roleIdx !== -1) {
-    return review.slice(roleIdx).trim();
+    const sliced = review.slice(roleIdx);
+
+    // 念のため「# 最終プロンプト」が紛れていたら削る
+    return sliced.replace(/^# 最終プロンプト\s*/m, "").trim();
   }
 
-  return review.trim();
+  // 2. 「# 役割」が無い場合は全文をそのまま使う
+  return review.replace(/^# 最終プロンプト\s*/m, "").trim();
 }
 
 
