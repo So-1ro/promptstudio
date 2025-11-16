@@ -12,7 +12,7 @@ type DesignResult = {
 function extractFinalPrompt(review: string): string {
   if (!review) return "";
 
-  // 1. ``` で囲まれたコードブロックがあれば、その中身を優先
+  // 1. ``` ～ ``` で囲まれたコードブロックがあれば、その中身を優先
   const firstFence = review.indexOf("```");
   if (firstFence !== -1) {
     let afterFirst = review.slice(firstFence + 3); // ``` の後ろ
@@ -33,13 +33,7 @@ function extractFinalPrompt(review: string): string {
     if (trimmed) return trimmed;
   }
 
-  // 2. フォールバック：テキスト内の「# 役割」以降
-  const roleIdx = review.indexOf("# 役割");
-  if (roleIdx !== -1) {
-    return review.slice(roleIdx).trim();
-  }
-
-  // 3. さらにフォールバック：全文
+  // 2. コードブロックが無ければ、Reviewer の出力全文をそのまま使う
   return review.trim();
 }
 
