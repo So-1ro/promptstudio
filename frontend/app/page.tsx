@@ -307,7 +307,6 @@ export default function Home() {
               fontFamily:
                 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
               minHeight: "200px",
-              maxHeight: "600px",
               overflowY: "auto",
               whiteSpace: "pre-wrap",
             }}
